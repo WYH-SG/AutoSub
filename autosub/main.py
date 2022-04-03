@@ -5,16 +5,23 @@ import os
 import re
 import sys
 import wave
-from . import logger
+# from . import logger
+import logger
 import argparse
 
 import numpy as np
 from tqdm import tqdm
 
-from .utils import *
-from .writeToFile import write_to_file
-from .audioProcessing import extract_audio
-from .segmentAudio import remove_silent_segments
+# from .utils import *
+# from .writeToFile import write_to_file
+# from .audioProcessing import extract_audio
+# from .segmentAudio import remove_silent_segments
+
+import utils 
+from writeToFile import write_to_file
+from audioProcessing import extract_audio
+from segmentAudio import remove_silent_segments
+
 
 _logger = logger.setup_applevel_logger(__name__)
 
@@ -103,11 +110,11 @@ def main():
     #print(sys.argv[0:])
     _logger.info(f"ARGS: {args}")
 
-    ds_model = get_model(args, "model")
-    ds_scorer = get_model(args, "scorer")
+    ds_model = utils.get_model(args, "model")
+    ds_scorer = utils.get_model(args, "scorer")
 
     if args.dry_run:
-        create_model(args.engine, ds_model, ds_scorer) 
+        utils.create_model(args.engine, ds_model, ds_scorer) 
         if args.file is not None:
             if not os.path.isfile(args.file):
                 _logger.warn(f"Invalid file: {args.file}")
@@ -143,18 +150,18 @@ def main():
             output_file_handle_dict[format].write("WEBVTT\n")
             output_file_handle_dict[format].write("Kind: captions\n\n")
 
-    clean_folder(audio_directory)
+    utils.clean_folder(audio_directory)
     extract_audio(input_file, audio_file_name)
 
     _logger.info("Splitting on silent parts in audio file")
     remove_silent_segments(audio_file_name)
 
     audiofiles = [file for file in os.listdir(audio_directory) if file.startswith(video_prefix)]
-    audiofiles = sort_alphanumeric(audiofiles)
+    audiofiles = utils.sort_alphanumeric(audiofiles)
     audiofiles.remove(os.path.basename(audio_file_name))
 
     _logger.info("Running inference...")
-    ds = create_model(args.engine, ds_model, ds_scorer) 
+    ds = utils.create_model(args.engine, ds_model, ds_scorer) 
 
     for filename in tqdm(audiofiles):
         audio_segment_path = os.path.join(audio_directory, filename)
@@ -166,5 +173,9 @@ def main():
         file_handle.close()
 
 
+# python autosub/main.py --file videos\MIB_Sample.mp4 --model deepspeech-0.9.3-models.pbmm --scorer deepspeech-0.9.3-models.scorer
+
+# Working Version using tflite file
+# python autosub/main.py --file videos\MIB_Sample.mp4 --model deepspeech-0.9.3-models.tflite  --scorer deepspeech-0.9.3-models.scorer
 if __name__ == "__main__":
     main()

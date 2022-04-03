@@ -49,6 +49,7 @@ Thumbs.db
 # Venv
 sub/*
 __pycache__
+.venv
 
 # Folders
 audio/

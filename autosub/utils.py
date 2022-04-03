@@ -5,7 +5,7 @@ import re
 import os
 import sys
 import shutil
-from . import logger
+import logger
 import subprocess
 from stt import Model as SModel
 from deepspeech import Model as DModel
